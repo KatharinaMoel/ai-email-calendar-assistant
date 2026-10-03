@@ -59,11 +59,6 @@ app/
 │   └── nylas_service.py       # Reusable email operations
 └── templates/
     └── index.html             # Local webhook viewer
-
-playground/                    # Small experiments and API exercises
-requests/events/               # Ignored local webhook captures
-docs/                          # Cohort guides
-docker/                        # Deployment files added later
 ```
 
 ## Development Approach

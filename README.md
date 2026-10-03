@@ -1,24 +1,50 @@
 # AI Personal Assistant
 
-An incremental cohort project for building an AI assistant that helps manage email and calendar work. Nylas provides one integration layer for supported email and calendar providers, while the application keeps receiving events, AI decisions, data access, and user-facing APIs separate.
+## Introduction
 
-## Week 1
+This project builds a personal AI assistant focused on email and calendar management. It is inspired by the idea that inbox and calendar administration are among the first responsibilities busy people should delegate so they can spend more time on high-value work.
 
-Week 1 establishes the repository structure and the boundaries of the application. The files are intentionally lightweight placeholders that later weeks will implement.
+The assistant receives email and calendar events, understands what needs attention, stores useful context, and eventually helps take appropriate actions. The repository is developed incrementally as a cohort project, with each weekly branch adding another production-oriented capability.
 
-```text
-Email and calendar providers
-        ↓
-      Nylas
-        ↓ webhooks / API
-     FastAPI
-        ↓
-  Assistant workflows
-   ↙           ↘
-PostgreSQL     OpenAI
+## Why Nylas?
+
+The project uses [Nylas](https://www.nylas.com/) as the integration layer for email and calendar providers:
+
+- **Unified API:** one interface for Gmail, Outlook, Exchange, and other supported providers
+- **Managed authentication:** hosted OAuth flows and token refresh handling
+- **Webhooks:** real-time notifications when email or calendar activity occurs
+- **Provider flexibility:** application workflows remain separate from provider-specific APIs
+
+This lets the project focus on assistant behavior rather than rebuilding authentication and synchronization for every provider.
+
+## What This Project Teaches
+
+The assistant provides a practical setting for learning the main parts of an end-to-end AI application:
+
+1. **External integrations:** connect securely to email and calendar services
+2. **Event-driven systems:** receive and validate real-time webhook events
+3. **Data modeling:** normalize provider data into stable application schemas
+4. **Persistence:** store raw events, processed results, and assistant state
+5. **AI workflows:** classify messages and decide which workflow should run
+6. **Safe actions:** keep users in control of consequential email and calendar changes
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+    Email[Email] --> Nylas[Nylas API]
+    Calendar[Calendar] --> Nylas
+    Nylas -->|Webhook events| API[FastAPI]
+    API -->|Store raw events| DB[(PostgreSQL)]
+    API --> Services[Assistant workflows]
+    Services --> Agent[AI assistant]
+    Agent -->|Processed results| DB
+    Services -->|Approved actions| Nylas
+    Nylas --> Email
+    Nylas --> Calendar
 ```
 
-## Project structure
+## Project Structure
 
 ```text
 app/
@@ -45,12 +71,8 @@ app/
     └── webhook.py             # Incoming event data
 ```
 
-## Getting started
+## Development Approach
 
-1. Install Python 3.12 or newer and `uv`.
-2. Copy `.env.example` to `.env`.
-3. Create a Nylas developer account and fill in the Nylas values.
-4. Run `uv sync`.
-5. Start the placeholder application with `uv run python -m app.main`.
+The repository is intentionally built in stages. `main` describes the overall destination, while each `week-*` branch captures the project at a specific point in the cohort. Start with `week-1` for environment setup, Nylas authentication, and the first webhook.
 
-Never commit `.env` or real account credentials.
+Never commit `.env`, API keys, access tokens, webhook secrets, or personal email content.

@@ -1,1 +1,0 @@
-"""Nylas webhook endpoints."""

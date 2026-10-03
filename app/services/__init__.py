@@ -1,1 +1,1 @@
-"""Application workflow services."""
+"""External service wrappers."""

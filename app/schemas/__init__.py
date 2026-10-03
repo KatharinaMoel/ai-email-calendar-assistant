@@ -1,1 +1,1 @@
-"""Canonical application schemas."""
+"""Nylas payload schemas."""

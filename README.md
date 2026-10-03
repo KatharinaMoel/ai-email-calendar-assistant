@@ -48,27 +48,22 @@ flowchart LR
 
 ```text
 app/
-├── main.py                    # Application entry point
-├── config.py                  # Environment-based settings
-├── api/routes/
-│   ├── health.py              # Health endpoint
-│   └── webhooks.py            # Receive Nylas webhook events
-├── integrations/nylas/
-│   ├── client.py              # Nylas API client
-│   └── auth.py                # Hosted authentication flow
-├── agents/
-│   └── assistant.py           # AI decision-making logic
+├── main.py                    # FastAPI app and webhook endpoint
+├── config/
+│   ├── config_auth.py         # Nylas hosted authentication setup
+│   └── config_webhook.py      # Nylas webhook registration
+├── schemas/
+│   ├── nylas_email_schema.py  # Email payload model
+│   └── nylas_webhook_schema.py # Webhook event model
 ├── services/
-│   ├── email.py               # Email workflow coordination
-│   └── calendar.py            # Calendar workflow coordination
-├── database/
-│   ├── connection.py          # PostgreSQL connection
-│   ├── models.py              # Database tables
-│   └── repository.py          # Database reads and writes
-└── schemas/
-    ├── email.py               # Canonical email data
-    ├── calendar.py            # Canonical calendar data
-    └── webhook.py             # Incoming event data
+│   └── nylas_service.py       # Reusable email operations
+└── templates/
+    └── index.html             # Local webhook viewer
+
+playground/                    # Small experiments and API exercises
+requests/events/               # Ignored local webhook captures
+docs/                          # Cohort guides
+docker/                        # Deployment files added later
 ```
 
 ## Development Approach

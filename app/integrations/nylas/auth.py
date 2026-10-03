@@ -1,1 +1,0 @@
-"""Nylas hosted authentication flow."""

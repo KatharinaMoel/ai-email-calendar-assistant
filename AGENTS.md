@@ -2,9 +2,9 @@
 
 Build this AI personal assistant incrementally for a teaching cohort.
 
-- Keep email/calendar provider details behind `app/services/nylas_service.py`.
-- Keep one-time Nylas setup scripts under `app/config/`.
-- Keep webhook handling, schemas, service operations, and UI templates separate.
+- Keep Week 1 limited to project orientation, local tooling, GitHub, and account setup.
+- Begin application code and Nylas integration in Week 2.
+- Add folders only when the project has code that belongs in them.
 - Use canonical schemas instead of passing provider payloads throughout the app.
 - Store raw events before asynchronous processing when that behavior is implemented.
 - Require user confirmation before consequential actions such as sending email or changing a calendar.

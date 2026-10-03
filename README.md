@@ -2,67 +2,47 @@
 
 ## Introduction
 
-This project builds a personal AI assistant focused on email and calendar management. It is inspired by the idea that inbox and calendar administration are among the first responsibilities busy people should delegate so they can spend more time on high-value work.
+This cohort project explores how to build an AI assistant for email and calendar work. The assistant will eventually connect to an email provider, receive new-message events, understand what needs attention, and help the user take appropriate actions.
 
-The assistant receives email and calendar events, understands what needs attention, stores useful context, and eventually helps take appropriate actions. The repository is developed incrementally as a cohort project, with each weekly branch adding another production-oriented capability.
+We will build the project incrementally. The first week focuses on understanding the goal and preparing a reliable development environment. Later weeks will introduce Nylas integration, email workflows, AI decision-making, persistence, and deployment.
 
 ## Why Nylas?
 
-The project uses [Nylas](https://www.nylas.com/) as the integration layer for email and calendar providers:
+[Nylas](https://www.nylas.com/) gives applications one API for supported email and calendar providers. It handles provider authentication and can notify our application when something changes.
 
-- **Unified API:** one interface for Gmail, Outlook, Exchange, and other supported providers
-- **Managed authentication:** hosted OAuth flows and token refresh handling
-- **Webhooks:** real-time notifications when email or calendar activity occurs
-- **Provider flexibility:** application workflows remain separate from provider-specific APIs
+We will use Nylas in Week 2. No email account connection or webhook implementation is required in Week 1.
 
-This lets the project focus on assistant behavior rather than rebuilding authentication and synchronization for every provider.
-
-## What This Project Teaches
-
-The assistant provides a practical setting for learning the main parts of an end-to-end AI application:
-
-1. **External integrations:** connect securely to email and calendar services
-2. **Event-driven systems:** receive and validate real-time webhook events
-3. **Data modeling:** normalize provider data into stable application schemas
-4. **Persistence:** store raw events, processed results, and assistant state
-5. **AI workflows:** classify messages and decide which workflow should run
-6. **Safe actions:** keep users in control of consequential email and calendar changes
-
-## Architecture Overview
-
-```mermaid
-flowchart LR
-    Email[Email] --> Nylas[Nylas API]
-    Calendar[Calendar] --> Nylas
-    Nylas -->|Webhook events| API[FastAPI]
-    API -->|Store raw events| DB[(PostgreSQL)]
-    API --> Services[Assistant workflows]
-    Services --> Agent[AI assistant]
-    Agent -->|Processed results| DB
-    Services -->|Approved actions| Nylas
-    Nylas --> Email
-    Nylas --> Calendar
-```
-
-## Project Structure
+## Project Direction
 
 ```text
-app/
-├── main.py                    # FastAPI app and webhook endpoint
-├── config/
-│   ├── config_auth.py         # Nylas hosted authentication setup
-│   └── config_webhook.py      # Nylas webhook registration
-├── schemas/
-│   ├── nylas_email_schema.py  # Email payload model
-│   └── nylas_webhook_schema.py # Webhook event model
-├── services/
-│   └── nylas_service.py       # Reusable email operations
-└── templates/
-    └── index.html             # Local webhook viewer
+Email and calendar provider
+        ↓
+      Nylas
+        ↓
+AI personal assistant
+        ↓
+User reviews or approves an action
 ```
 
-## Development Approach
+The final assistant should be able to:
 
-The repository is intentionally built in stages. `main` describes the overall destination, while each `week-*` branch captures the project at a specific point in the cohort. Start with `week-1` for environment setup, Nylas authentication, and the first webhook.
+- connect to a supported email and calendar provider
+- receive and understand new email events
+- classify requests and route them to the correct workflow
+- suggest or perform approved email and calendar actions
+- keep credentials and personal data secure
 
-Never commit `.env`, API keys, access tokens, webhook secrets, or personal email content.
+## Before Week 1
+
+Create the accounts needed for the cohort:
+
+1. Create a [GitHub account](https://github.com/) if you do not already have one.
+2. Install Git and Python 3.12 or newer.
+3. Install [uv](https://docs.astral.sh/uv/).
+4. Choose an editor such as VS Code or Cursor.
+
+## Start with Week 1
+
+The [`week-1`](https://github.com/lindseypeng/ai-personal-assistant/tree/week-1) branch contains the complete setup guide. It covers local tools, creating your own repository, and optional Nylas preparation for Week 2.
+
+Never commit API keys, access tokens, webhook secrets, or personal email content.

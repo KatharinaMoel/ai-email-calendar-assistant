@@ -31,6 +31,7 @@ User reviews or approves an action
 - Git
 - A GitHub account
 - [uv](https://docs.astral.sh/uv/)
+- Docker Desktop or Docker Engine with Compose
 - VS Code, Cursor, or another code editor
 
 Confirm the command-line tools are available:
@@ -39,6 +40,8 @@ Confirm the command-line tools are available:
 python3 --version
 git --version
 uv --version
+docker --version
+docker compose version
 ```
 
 ## 2. Get the Week 1 Materials
@@ -68,6 +71,24 @@ On Windows PowerShell, activate the environment with:
 ```
 
 There is no application to run yet. This step confirms that Python and `uv` work before we start coding in Week 2.
+
+### Verify Docker Compose
+
+The Compose file runs a small setup check with the official Python image. It does not start the assistant application because we have not built one yet.
+
+Make sure Docker Desktop or the Docker daemon is running, then execute:
+
+```bash
+docker compose up
+```
+
+Expected output:
+
+```text
+Docker Compose is ready for AI Personal Assistant.
+```
+
+The container exits with status `0` after printing the message. This confirms that Docker can read the Compose file, download an image, and run a container.
 
 ## 4. Create Your Own GitHub Repository
 

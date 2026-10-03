@@ -102,16 +102,145 @@ The `.env` file belongs only on your computer and is excluded by `.gitignore`. N
 
 ## Homework: Prepare Nylas for Week 2
 
-The goal is account preparation only. Do not connect your inbox or configure a webhook yet.
+This homework prepares the external service we will connect to in Week 2. Complete the dashboard and local configuration steps now. The authentication and webhook commands are included below as a preview, but they require application files that we will build together next week.
 
-1. Create a free [Nylas developer account](https://dashboard-v3.nylas.com/register).
-2. Sign in to the Nylas Dashboard.
-3. Create an application for the cohort project.
-4. Note whether the application uses the US or EU API region.
-5. Locate the application's client ID and API key, but do not paste or share them in class.
-6. Read the [Nylas v3 getting-started documentation](https://developer.nylas.com/docs/v3/getting-started/).
+### 1. Create a Nylas Developer Account
 
-In Week 2, we will add the application code, configure hosted authentication, connect a development email account, and then introduce webhooks with the necessary context.
+1. Register for a free account at the [Nylas Dashboard](https://dashboard-v3.nylas.com/register).
+2. Verify your email address and sign in.
+3. Create an application named `ai-personal-assistant`.
+4. Choose the API region closest to you:
+   - US: `https://api.us.nylas.com`
+   - EU: `https://api.eu.nylas.com`
+
+Keep the selected region consistent throughout the project.
+
+### 2. Find the Application Credentials
+
+In the Nylas Dashboard, locate and record:
+
+- the client ID
+- the API key
+- the API URI for the selected region
+
+These values are secrets. Store them only in your local `.env` file. Do not paste them into Slack, screenshots, class notes, commits, or pull requests.
+
+### 3. Prepare the Local Environment File
+
+Create a local environment file from the template:
+
+```bash
+cp .env.example .env
+```
+
+Add the values available from the dashboard:
+
+```env
+NYLAS_CLIENT_ID=your_client_id
+NYLAS_API_KEY=your_api_key
+NYLAS_API_URI=https://api.eu.nylas.com
+EMAIL=you@example.com
+```
+
+Use the US URI instead if the Nylas application belongs to the US region. Leave `NYLAS_GRANT_ID`, `NYLAS_WEBHOOK_SECRET`, and `SERVER_URL` empty for now.
+
+Confirm that `.env` does not appear in the files staged for Git:
+
+```bash
+git status
+```
+
+### 4. Prepare Hosted Authentication
+
+Hosted authentication is the Nylas login page that will let a user connect an email account without our application managing provider passwords.
+
+In the Nylas Dashboard:
+
+1. Open the application's hosted-authentication settings.
+2. Add this callback URI:
+
+```text
+http://localhost:5010/oauth/exchange
+```
+
+3. Save the configuration.
+
+The callback will not work yet because Week 1 does not contain an application server. We will implement it in Week 2.
+
+### 5. Week 2 Authentication Preview
+
+After we create the Nylas authentication helper in Week 2, the flow will be:
+
+```text
+Browser → Nylas login → callback in our application → grant ID
+```
+
+We will then run:
+
+```bash
+uv run python -m app.config.config_auth
+```
+
+and visit:
+
+```text
+http://localhost:5010/nylas/auth
+```
+
+After connecting a development email account, Nylas will return a grant ID. We will store it locally:
+
+```env
+NYLAS_GRANT_ID=your_grant_id
+```
+
+Do not run these commands in Week 1 because `app.config.config_auth` does not exist yet.
+
+### 6. Week 2 Webhook Preview
+
+A webhook allows Nylas to notify our application when a new email arrives:
+
+```text
+New email → Nylas → public HTTPS URL → our local application
+```
+
+Our local server will not be publicly reachable by default. In Week 2, we will create a temporary HTTPS tunnel with Pinggy:
+
+```bash
+ssh -p 443 -R0:localhost:8000 free.pinggy.io
+```
+
+We will copy the HTTPS URL that Pinggy returns into `.env`:
+
+```env
+SERVER_URL=https://your-pinggy-url
+```
+
+After building the webhook configuration script, we will register the endpoint with:
+
+```bash
+uv run python -m app.config.config_webhook
+```
+
+Nylas will return a webhook secret, which we will store locally:
+
+```env
+NYLAS_WEBHOOK_SECRET=your_webhook_secret
+```
+
+Do not create the tunnel or webhook in Week 1. The local server and webhook endpoint will be introduced first in Week 2.
+
+### Homework Completion Criteria
+
+By the start of Week 2:
+
+- your Nylas developer account exists
+- the `ai-personal-assistant` application exists in the dashboard
+- you know whether it uses the US or EU region
+- the client ID, API key, API URI, and email address are stored in your local `.env`
+- the callback URI is saved in the hosted-authentication settings
+- no credentials have been committed to GitHub
+
+For additional context, read the [Nylas v3 getting-started documentation](https://developer.nylas.com/docs/v3/getting-started/).
 
 ## Week 1 Checklist
 

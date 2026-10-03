@@ -1,48 +1,126 @@
-# AI Personal Assistant
+# Week 1: Project and Nylas Setup
 
-## Introduction
+## This Week's Goals
 
-This project builds a personal AI assistant focused on email and calendar management. It is inspired by the idea that inbox and calendar administration are among the first responsibilities busy people should delegate so they can spend more time on high-value work.
+1. Understand the AI personal assistant and its architecture
+2. Set up the local Python project
+3. Create and configure a Nylas developer account
+4. Connect an email account through Nylas
+5. Understand how a public webhook reaches a local application
+6. Become familiar with the webhook event model
 
-The assistant receives email and calendar events, understands what needs attention, stores useful context, and eventually helps take appropriate actions. The repository is developed incrementally as a cohort project, with each weekly branch adding another production-oriented capability.
+Week 1 focuses on foundations. The repository contains the intended application boundaries as lightweight placeholders; later weeks will implement the workflows behind them.
 
-## Why Nylas?
-
-The project uses [Nylas](https://www.nylas.com/) as the integration layer for email and calendar providers:
-
-- **Unified API:** one interface for Gmail, Outlook, Exchange, and other supported providers
-- **Managed authentication:** hosted OAuth flows and token refresh handling
-- **Webhooks:** real-time notifications when email or calendar activity occurs
-- **Provider flexibility:** application workflows remain separate from provider-specific APIs
-
-This lets the project focus on assistant behavior rather than rebuilding authentication and synchronization for every provider.
-
-## What This Project Teaches
-
-The assistant provides a practical setting for learning the main parts of an end-to-end AI application:
-
-1. **External integrations:** connect securely to email and calendar services
-2. **Event-driven systems:** receive and validate real-time webhook events
-3. **Data modeling:** normalize provider data into stable application schemas
-4. **Persistence:** store raw events, processed results, and assistant state
-5. **AI workflows:** classify messages and decide which workflow should run
-6. **Safe actions:** keep users in control of consequential email and calendar changes
-
-## Architecture Overview
+## Architecture
 
 ```mermaid
 flowchart LR
-    Email[Email] --> Nylas[Nylas API]
-    Calendar[Calendar] --> Nylas
-    Nylas -->|Webhook events| API[FastAPI]
-    API -->|Store raw events| DB[(PostgreSQL)]
+    Email[Email provider] --> Nylas[Nylas API]
+    Calendar[Calendar provider] --> Nylas
+    Nylas -->|Webhook events| Tunnel[Public tunnel]
+    Tunnel --> API[FastAPI application]
     API --> Services[Assistant workflows]
+    Services --> DB[(PostgreSQL)]
     Services --> Agent[AI assistant]
-    Agent -->|Processed results| DB
     Services -->|Approved actions| Nylas
-    Nylas --> Email
-    Nylas --> Calendar
 ```
+
+## Prerequisites
+
+- Python 3.12 or newer
+- [uv](https://docs.astral.sh/uv/)
+- Git and a GitHub account
+- A [Nylas developer account](https://dashboard-v3.nylas.com/register)
+- An email account you can safely use for development
+
+## 1. Clone the Project
+
+```bash
+git clone https://github.com/lindseypeng/ai-personal-assistant.git
+cd ai-personal-assistant
+git switch week-1
+```
+
+If cohort members maintain their own copy, they should create an empty repository and replace `origin` with its URL before pushing.
+
+## 2. Set Up the Python Environment
+
+```bash
+uv venv
+source .venv/bin/activate
+uv sync
+```
+
+Run the Week 1 starter:
+
+```bash
+uv run python -m app.main
+```
+
+Expected output:
+
+```text
+AI Personal Assistant starter project is running!
+```
+
+## 3. Configure Nylas
+
+1. Sign in to the [Nylas Dashboard](https://dashboard-v3.nylas.com/).
+2. Create an application for the project.
+3. Record the client ID, API key, and API region.
+4. Configure a hosted-auth callback URL for local development. The OAuth implementation will live in `app/integrations/nylas/auth.py`.
+5. Connect a development email account and record its grant ID.
+
+Copy the environment template:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the local `.env` file:
+
+```env
+NYLAS_API_KEY=your_nylas_api_key
+NYLAS_API_URI=https://api.us.nylas.com
+NYLAS_CLIENT_ID=your_nylas_client_id
+NYLAS_GRANT_ID=your_nylas_grant_id
+NYLAS_WEBHOOK_SECRET=your_webhook_secret
+
+EMAIL=you@example.com
+SERVER_URL=https://your-public-webhook-url.example
+
+OPENAI_API_KEY=your_openai_api_key
+```
+
+Use the EU Nylas API URI instead if the application was created in the EU region. Never commit `.env`.
+
+## 4. Understand the Webhook Setup
+
+A webhook lets Nylas notify the application when an email or calendar event changes, instead of requiring the application to poll continuously.
+
+```text
+New email → Nylas → public HTTPS tunnel → local FastAPI webhook route
+```
+
+During local development, expose the future FastAPI server on port `8000` with a tunneling service such as Pinggy:
+
+```bash
+ssh -p 443 -R0:localhost:8000 free.pinggy.io
+```
+
+Save the generated HTTPS URL as `SERVER_URL`. When webhook handling is implemented, Nylas will send events to the route in `app/api/routes/webhooks.py`, and the application must verify them with `NYLAS_WEBHOOK_SECRET` before processing them.
+
+## 5. Explore the Event Model
+
+Webhook payloads are provider-facing input, not the application's permanent internal format. The intended flow is:
+
+1. Receive and verify the Nylas event.
+2. Store the raw event for traceability.
+3. Normalize useful fields into the schemas under `app/schemas/`.
+4. Route the event to an email or calendar service.
+5. Ask for user confirmation before consequential actions.
+
+Do not print or commit real message bodies, access tokens, or webhook secrets while experimenting.
 
 ## Project Structure
 
@@ -71,8 +149,9 @@ app/
     └── webhook.py             # Incoming event data
 ```
 
-## Development Approach
+## Additional Resources
 
-The repository is intentionally built in stages. `main` describes the overall destination, while each `week-*` branch captures the project at a specific point in the cohort. Start with `week-1` for environment setup, Nylas authentication, and the first webhook.
-
-Never commit `.env`, API keys, access tokens, webhook secrets, or personal email content.
+- [Nylas v3 documentation](https://developer.nylas.com/docs/v3/)
+- [FastAPI documentation](https://fastapi.tiangolo.com/)
+- [Pydantic documentation](https://docs.pydantic.dev/latest/)
+- [Pinggy documentation](https://pinggy.io/)

@@ -9,7 +9,7 @@
 5. Understand how a public webhook reaches a local application
 6. Become familiar with the webhook event model
 
-Week 1 focuses on foundations. The repository contains the intended application boundaries as lightweight placeholders; later weeks will implement the workflows behind them.
+Week 1 focuses on foundations. The branch includes a working local FastAPI server, Nylas authentication and webhook setup scripts, typed event models, and a simple page for inspecting received emails. Later weeks add AI workflows and persistent storage.
 
 ## Architecture
 
@@ -51,24 +51,20 @@ source .venv/bin/activate
 uv sync
 ```
 
-Run the Week 1 starter:
+Start the webhook server:
 
 ```bash
 uv run python -m app.main
 ```
 
-Expected output:
-
-```text
-AI Personal Assistant starter project is running!
-```
+Open `http://localhost:8000/health` to verify that it returns `{"status":"ok"}`.
 
 ## 3. Configure Nylas
 
 1. Sign in to the [Nylas Dashboard](https://dashboard-v3.nylas.com/).
 2. Create an application for the project.
 3. Record the client ID, API key, and API region.
-4. Configure a hosted-auth callback URL for local development. The OAuth implementation will live in `app/integrations/nylas/auth.py`.
+4. Add `http://localhost:5010/oauth/exchange` as a hosted-auth callback URL.
 5. Connect a development email account and record its grant ID.
 
 Copy the environment template:
@@ -94,6 +90,14 @@ OPENAI_API_KEY=your_openai_api_key
 
 Use the EU Nylas API URI instead if the application was created in the EU region. Never commit `.env`.
 
+Run the authentication helper:
+
+```bash
+uv run python -m app.config.config_auth
+```
+
+Visit `http://localhost:5010/nylas/auth`, connect the development account, and copy its grant ID into `.env` as `NYLAS_GRANT_ID`.
+
 ## 4. Understand the Webhook Setup
 
 A webhook lets Nylas notify the application when an email or calendar event changes, instead of requiring the application to poll continuously.
@@ -102,13 +106,19 @@ A webhook lets Nylas notify the application when an email or calendar event chan
 New email → Nylas → public HTTPS tunnel → local FastAPI webhook route
 ```
 
-During local development, expose the future FastAPI server on port `8000` with a tunneling service such as Pinggy:
+During local development, expose the FastAPI server on port `8000` with a tunneling service such as Pinggy:
 
 ```bash
 ssh -p 443 -R0:localhost:8000 free.pinggy.io
 ```
 
-Save the generated HTTPS URL as `SERVER_URL`. When webhook handling is implemented, Nylas will send events to the route in `app/api/routes/webhooks.py`, and the application must verify them with `NYLAS_WEBHOOK_SECRET` before processing them.
+Save the generated HTTPS URL as `SERVER_URL`, then register the webhook:
+
+```bash
+uv run python -m app.config.config_webhook
+```
+
+Copy the returned secret into `NYLAS_WEBHOOK_SECRET`. Nylas sends new-message events to `/events`; the application verifies each signature before storing or displaying the event.
 
 ## 5. Explore the Event Model
 

@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+*.pyc
+
+# Virtual environments
+.venv
+
+# PyCharm files
+.idea/
+
+# Secrets
+.env
+
+# Local webhook captures
+requests/events/*.json

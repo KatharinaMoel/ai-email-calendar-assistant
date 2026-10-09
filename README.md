@@ -27,6 +27,18 @@ New email → Nylas → Serveo tunnel → main.py /events → saved to requests/
                                                     → shown at localhost:8000
 ```
 
+Some steps run once, and some run every time you work on the project:
+
+| Step | When to run it |
+|------|----------------|
+| Step 1: Connect your email account | Once. Run it again only to switch accounts or if your grant expires. |
+| Step 2: Start the tunnel | Every session, and again whenever it drops |
+| Step 3: Start `main.py` | Every session |
+| Step 4: Create the webhook | Only when the tunnel URL changes |
+| Step 5: Test the webhook | Whenever you want to confirm emails are arriving |
+
+Each session, start Steps 2 and 3. If the Serveo URL differs from `SERVER_URL`, redo Step 4.
+
 ### Step 1: Connect Your Email Account
 
 Start the authentication helper:

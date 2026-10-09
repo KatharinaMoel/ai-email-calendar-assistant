@@ -118,18 +118,9 @@ The `week2/` folder has standalone quickstarts for each type of model call. See 
 | `week2/ollama-quickstart.py` | Open source model running locally, no key |
 | `week2/pydantic-introduction.ipynb` | Pydantic basics |
 
-## Troubleshooting: Webhook Stops Working
+## Troubleshooting
 
-The Nylas webhook becomes invalid once the tunnel URL expires or changes. To fix it:
-
-1. Delete the webhook in the Nylas Dashboard under **Notifications**.
-2. Clear `SERVER_URL` and `WEBHOOK_SECRET` in `.env`.
-3. Run the Serveo SSH command and copy the new URL into `SERVER_URL`.
-4. Start the server: `cd app` then `uv run main.py`.
-5. In another terminal, create the webhook: `cd app/config` then `uv run config_webhook.py`.
-6. Copy the printed secret into `WEBHOOK_SECRET`.
-7. Stop the `main.py` server.
-8. Start it again with `uv run main.py` so it loads the new secret.
+If the webhook stops working or returns errors, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md). It covers resetting an expired tunnel, `401` errors, firewall or VPN issues, and port conflicts.
 
 ## How the Pieces Fit
 

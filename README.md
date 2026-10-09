@@ -1,12 +1,9 @@
-# Week 2: Connect Nylas and Practice LLM Calls
+# Week 2: Capture Emails and Test LLM Calls
 
 ## This Week's Goals
 
-1. Connect an email account through Nylas hosted authentication
-2. Read and send test emails through the Nylas API
-3. Expose the local server with a Serveo tunnel
-4. Register a webhook and receive your first new-email event
-5. Practice the main types of LLM calls: a hosted generative model (OpenAI), structured output, a decision model (Jev), and an open source local model (Ollama)
+1. **Capture emails on your laptop:** Connect your inbox through Nylas so every new email is delivered to your local app and saved.
+2. **Test LLM calls:** Run small examples that call different kinds of language models.
 
 ## Before You Start
 
@@ -21,7 +18,16 @@ Install the dependencies:
 uv sync
 ```
 
-## 1. Connect Your Email Account
+## Part 1: Capture Emails on Your Laptop
+
+When this part is done, each new email flows to your laptop like this:
+
+```text
+New email → Nylas → Serveo tunnel → main.py /events → saved to requests/events/
+                                                    → shown at localhost:8000
+```
+
+### Step 1: Connect Your Email Account
 
 Start the authentication helper:
 
@@ -52,7 +58,7 @@ Browser → Nylas login → http://localhost:5010/oauth/exchange → grant ID
 
 Nylas only redirects to callback URIs registered in the dashboard, which is why the Week 1 homework added it.
 
-## 2. Configure a Tunnel
+### Step 2: Configure a Tunnel
 
 Nylas must reach your local server over the internet to deliver webhooks. We use [Serveo](https://serveo.net/), which needs no account or installation.
 
@@ -68,9 +74,9 @@ Copy the public HTTPS URL it prints into `.env`:
 SERVER_URL=https://your-subdomain.serveo.net
 ```
 
-Keep this terminal open. The URL usually changes each time you reconnect, so update `SERVER_URL` and register a new webhook when it does.
+Keep this terminal open. Serveo is free and can disconnect on its own without warning. If the URL changes when you reconnect, update `SERVER_URL` and register a new webhook. See the [troubleshooting guide](docs/webhook-troubleshoot-guide.md#2-expired-or-changed-tunnel-url) for how to check whether the tunnel is down.
 
-## 3. Start the Server
+### Step 3: Start the Server
 
 In another terminal:
 
@@ -81,7 +87,7 @@ uv run main.py
 
 Visit `http://localhost:8000`. You should see the Nylas Webhooks page.
 
-## 4. Create the Webhook
+### Step 4: Create the Webhook
 
 ```bash
 cd app/config
@@ -98,7 +104,7 @@ Restart `main.py` so it loads the secret. Then open **Notifications** in the Nyl
 
 When you register a new webhook for a new tunnel URL, delete the old one in the dashboard.
 
-## 5. Test the Webhook
+### Step 5: Test the Webhook
 
 1. Send an email to the address in `EMAIL`.
 2. Watch the `main.py` terminal for the incoming request and a `200` status.
@@ -106,7 +112,20 @@ When you register a new webhook for a new tunnel URL, delete the old one in the 
 
 Each event is also saved as JSON in `requests/events/`. These files contain email content and are excluded from Git.
 
-## 6. Practice LLM Calls
+`main.py` and the tunnel must both be running to receive emails. If the webhook stops working or returns errors, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md).
+
+### Files in Part 1
+
+| File | Purpose |
+|------|---------|
+| `app/config/config_auth.py` | Hosted authentication and API checks on port 5010 |
+| `app/config/config_webhook.py` | Registers the webhook with Nylas (run once per tunnel URL) |
+| `app/main.py` | Receives webhooks, verifies the signature, stores events |
+| `app/schemas/nylas_webhook_schema.py` | Model for the webhook event wrapper |
+| `app/schemas/nylas_email_schema.py` | Model for the email inside the event |
+| `app/templates/index.html` | Page listing received emails |
+
+## Part 2: Test LLM Calls
 
 The `week2/` folder has standalone quickstarts for each type of model call. See [week2/README.md](week2/README.md) for the dependencies, API keys, and run commands.
 
@@ -117,27 +136,3 @@ The `week2/` folder has standalone quickstarts for each type of model call. See 
 | `week2/jev-quickstart.py` | Decision model with Choice, Score, and Noul |
 | `week2/ollama-quickstart.py` | Open source model running locally, no key |
 | `week2/pydantic-introduction.ipynb` | Pydantic basics |
-
-## Troubleshooting
-
-If the webhook stops working or returns errors, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md). It covers resetting an expired tunnel, `401` errors, firewall or VPN issues, and port conflicts.
-
-## How the Pieces Fit
-
-```text
-config_webhook.py (run once)   tells Nylas where to send new-email events
-
-New email → Nylas → Serveo tunnel → main.py /events → saved to requests/events/
-                                                    → shown at localhost:8000
-```
-
-| File | Purpose |
-|------|---------|
-| `app/config/config_auth.py` | Hosted authentication and API checks on port 5010 |
-| `app/config/config_webhook.py` | Registers the webhook with Nylas |
-| `app/main.py` | Receives webhooks, verifies the signature, stores events |
-| `app/schemas/nylas_webhook_schema.py` | Model for the webhook event wrapper |
-| `app/schemas/nylas_email_schema.py` | Model for the email inside the event |
-| `app/templates/index.html` | Page listing received emails |
-
-`main.py` and the tunnel must both be running to receive emails.

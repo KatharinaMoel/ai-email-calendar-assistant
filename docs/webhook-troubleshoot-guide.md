@@ -53,9 +53,36 @@ The webhook becomes invalid once the tunnel URL expires or changes. Most problem
 
 **Symptoms:** Emails arrive but nothing reaches `main.py`, or the Serveo terminal disconnected.
 
-Serveo usually gives you a new URL each time you reconnect, and the old webhook keeps pointing at the old URL.
+Serveo is free and does not publish a time limit for HTTP tunnels, so expect it to drop on its own without warning, for example after your laptop sleeps or your network changes. Nothing in the app shows an error when this happens. Emails keep arriving in your inbox, but Nylas can no longer reach `main.py`.
 
-**Fix:** Follow the [Reset Checklist](#reset-checklist-webhook-stops-working) above. Delete the old webhook each time you create a new one.
+**How to tell the tunnel is down:**
+
+- The Serveo terminal has returned to a normal prompt, or shows a message such as `Connection closed` or `Broken pipe`.
+- You send yourself an email, and no `POST /events` line appears in the `main.py` terminal.
+- No new email appears at `http://localhost:8000`.
+- The webhook under **Notifications** in the Nylas Dashboard shows a failing or inactive status.
+
+**How to check it:** Replace the URL with your `SERVER_URL` and run:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -H "serveo-skip-browser-warning: true" https://your-subdomain.serveo.net
+```
+
+- `200` means the tunnel and `main.py` are both working.
+- Any other code, or a connection error, means the tunnel or `main.py` is down. Check that both terminals are still running.
+
+**Fix:**
+
+- If Serveo gives you the **same URL** after you reconnect, just keep the new terminal open. The existing webhook still works.
+- If the URL **changed**, follow the [Reset Checklist](#reset-checklist-webhook-stops-working) above. Delete the old webhook each time you create a new one.
+
+To reconnect automatically when the tunnel drops, Serveo suggests `autossh` (install it with `brew install autossh` on macOS):
+
+```bash
+autossh -M 0 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8000 serveo.net
+```
+
+Serveo often, but not always, gives you the same URL after a reconnect, so still compare it with `SERVER_URL`.
 
 If Serveo is unavailable, you can use [Pinggy](https://pinggy.io/) as a backup. Its free URLs expire after 60 minutes:
 

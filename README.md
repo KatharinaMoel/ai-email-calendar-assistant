@@ -58,7 +58,7 @@ Nylas must reach your local server over the internet to deliver webhooks. We use
 In a separate terminal, run:
 
 ```bash
-ssh -R 80:localhost:8000 serveo.net
+ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8000 serveo.net
 ```
 
 Copy the public HTTPS URL it prints into `.env`:

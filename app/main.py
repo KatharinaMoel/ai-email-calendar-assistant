@@ -64,9 +64,7 @@ async def webhook(
 # Main page
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "webhooks": webhooks}
-    )
+    return templates.TemplateResponse(request, "index.html", {"webhooks": webhooks})
 
 
 # Signature verification

@@ -9,5 +9,6 @@ dependencies = [
     "nylas==6.9.0",
     "pydantic>=2.11.4",
     "python-dotenv>=1.1.0",
+    "typesafe-sdk==0.7.0",
     "uvicorn>=0.34.2",
 ]

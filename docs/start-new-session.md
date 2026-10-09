@@ -22,4 +22,13 @@ If you finished Part 1 before and are coming back to test again:
 6. **Restart `main.py` so it loads the new secret.**
 7. Send yourself an email to test.
 
+## Why Start and Restart `main.py`?
+
+`main.py` is the app that receives your emails. The tunnel only forwards traffic to it, so it must be running to capture anything. It is started and restarted for two separate reasons:
+
+- **Start `main.py` first** so it can answer Nylas's test request when you create the webhook. Without it, Nylas won't create the webhook.
+- **Restart `main.py` after** because creating the webhook gives you a new secret. `main.py` reads `.env` only when it starts, so it needs a restart to load the new secret and stop rejecting emails with `401`.
+
+When your tunnel URL stays the same and you don't create a new webhook, neither applies. You just start `main.py` once and it works.
+
 If it still doesn't work, see the [Webhook Troubleshooting Guide](webhook-troubleshoot-guide.md).

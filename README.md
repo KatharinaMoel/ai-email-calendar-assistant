@@ -37,7 +37,21 @@ Some steps run once, and some run every time you work on the project:
 | Step 4: Create the webhook | Only when the tunnel URL changes |
 | Step 5: Test the webhook | Whenever you want to confirm emails are arriving |
 
-Each session, start Steps 2 and 3. If the Serveo URL differs from `SERVER_URL`, redo Step 4.
+### Already Set Up? Start a New Session
+
+If you finished Part 1 before and are coming back to test again:
+
+1. Start the tunnel: `ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8000 serveo.net`
+2. Start the server: `cd app` then `uv run main.py`
+3. Compare the tunnel URL with `SERVER_URL` in `.env`.
+   - **Same URL:** You're done. Send yourself an email to test.
+   - **Different URL:** Delete the old webhook under **Notifications** in the Nylas Dashboard, update `SERVER_URL`, then continue below.
+4. Run `cd app/config` then `uv run config_webhook.py` to create the webhook and get a new secret.
+5. Paste the secret into `WEBHOOK_SECRET` in `.env`.
+6. **Restart `main.py` so it loads the new secret.**
+7. Send yourself an email to test.
+
+If it still doesn't work, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md).
 
 ### Step 1: Connect Your Email Account
 
@@ -112,7 +126,7 @@ This registers `SERVER_URL/events` with Nylas for new-email events and prints a 
 WEBHOOK_SECRET=your_webhook_secret
 ```
 
-Restart `main.py` so it loads the secret. Then open **Notifications** in the Nylas Dashboard to confirm the webhook is listed.
+**Restart `main.py` so it loads the secret.** `main.py` reads `.env` only when it starts, and it uses the secret to verify that each email came from Nylas. Without a restart, every email returns `401`. Then open **Notifications** in the Nylas Dashboard to confirm the webhook is listed.
 
 When you register a new webhook for a new tunnel URL, delete the old one in the dashboard.
 
@@ -126,16 +140,7 @@ Each event is also saved as JSON in `requests/events/`. These files contain emai
 
 `main.py` and the tunnel must both be running to receive emails. If the webhook stops working or returns errors, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md).
 
-### Files in Part 1
-
-| File | Purpose |
-|------|---------|
-| `app/config/config_auth.py` | Hosted authentication and API checks on port 5010 |
-| `app/config/config_webhook.py` | Registers the webhook with Nylas (run once per tunnel URL) |
-| `app/main.py` | Receives webhooks, verifies the signature, stores events |
-| `app/schemas/nylas_webhook_schema.py` | Model for the webhook event wrapper |
-| `app/schemas/nylas_email_schema.py` | Model for the email inside the event |
-| `app/templates/index.html` | Page listing received emails |
+To see what each file in Part 1 does, see [Email Capture Files](docs/email-capture-files.md).
 
 ## Part 2: Test LLM Calls
 

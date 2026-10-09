@@ -1,4 +1,4 @@
-# Week 2: Connect Nylas
+# Week 2: Connect Nylas and Practice LLM Calls
 
 ## This Week's Goals
 
@@ -6,6 +6,7 @@
 2. Read and send test emails through the Nylas API
 3. Expose the local server with a Serveo tunnel
 4. Register a webhook and receive your first new-email event
+5. Practice the main types of LLM calls: a hosted generative model (OpenAI), structured output, a decision model (Jev), and an open source local model (Ollama)
 
 ## Before You Start
 
@@ -104,6 +105,18 @@ When you register a new webhook for a new tunnel URL, delete the old one in the 
 3. Refresh `http://localhost:8000` to see the new message.
 
 Each event is also saved as JSON in `requests/events/`. These files contain email content and are excluded from Git.
+
+## 6. Practice LLM Calls
+
+The `week2/` folder has standalone quickstarts for each type of model call. See [week2/README.md](week2/README.md) for the dependencies, API keys, and run commands.
+
+| File | What it shows |
+|------|---------------|
+| `week2/openai-quickstart.py` | Hosted generative model with an API key |
+| `week2/structured_output.py` | Typed output with Pydantic and OpenAI |
+| `week2/jev-quickstart.py` | Decision model with Choice, Score, and Noul |
+| `week2/ollama-quickstart.py` | Open source model running locally, no key |
+| `week2/pydantic-introduction.ipynb` | Pydantic basics |
 
 ## Troubleshooting: Webhook Stops Working
 

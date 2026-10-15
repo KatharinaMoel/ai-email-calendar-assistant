@@ -16,7 +16,12 @@ load_dotenv()
 # Initialize OpenAI client
 # --------------------------------------------------------------
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# TODO: does only work if OPENAI_API_KEY is set in .env or shell
+api_key=os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise SystemExit("OPENAI_API_KEY is not set (shell or .env).")
+
+client = OpenAI(api_key=api_key)
 
 # --------------------------------------------------------------
 # Introducing instructions

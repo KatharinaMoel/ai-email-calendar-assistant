@@ -20,6 +20,7 @@
                     <th>Subject</th>
                     <th>From Name</th>
                     <th>From Email</th>
+                    <th>Spam Check</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,6 +40,17 @@
                     <td>
                         {% if webhook.from_ and webhook.from_[0].email %}
                             {{ webhook.from_[0].email }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set result = classifications.get(webhook.id) %}
+                        {% if result %}
+                            {{ result.category.value }} ({{ "%.2f" | format(result.confidence) }})
+                            {% if result.category.value == "spam" %}
+                                <form method="post" action="/delete/{{ webhook.id }}" onsubmit="return confirm('Delete this email?');">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>

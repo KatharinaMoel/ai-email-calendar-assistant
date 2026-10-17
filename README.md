@@ -28,11 +28,13 @@ If emails stop arriving, see the [Webhook Troubleshooting Guide](docs/webhook-tr
 >
 > You need three terminals, all in the repo root. Why the order matters: Nylas sends a test request to your URL when the webhook is created, so `main.py` must already be running. And `main.py` reads `.env` only at startup, so it needs a restart after you paste the new secret.
 >
-> **1. Tunnel (terminal 1)**
+> **1. Tunnel (terminal 1)**: Cloudflare Quick Tunnel instead of Serveo (Serveo dropped too often)
 > ```bash
-> ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8000 serveo.net
+> cloudflared tunnel --url http://localhost:8000
 > ```
-> Note the `https://…` URL that Serveo prints. Keep this terminal open.
+> In the output, find the `https://<random-words>.trycloudflare.com` URL. Keep this terminal open: the URL stays the same while `cloudflared` runs, but **a restart of `cloudflared` gives a new URL** (then do steps 2–8).
+> No account needed. One-time install on Fedora: see `docs/tunnel-notes.md`.
+> Don't use ngrok: Nylas blocks ngrok URLs (Nylas v3 webhook docs).
 >
 > **2. Compare with `.env`**
 > ```bash

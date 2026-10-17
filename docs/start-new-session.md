@@ -1,6 +1,6 @@
 # Start a New Session
 
-Some Part 1 steps in the Week 2 README run once, and some run every time you work on the project:
+Some Part 1 steps in the [Week 2 README](https://github.com/lindseypeng/ai-personal-assistant/blob/week-2/README.md) run once, and some run every time you work on the project:
 
 | Step | When to run it |
 |------|----------------|

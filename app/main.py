@@ -6,17 +6,21 @@ from typing import Optional
 import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, Header, Request, status
-from fastapi.responses import PlainTextResponse
+from fastapi import BackgroundTasks, FastAPI, Header, Request, status
+from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from schemas.nylas_email_schema import EmailObject
 from schemas.nylas_webhook_schema import WebhookEvent
+from workflows.spam_workflow import EmailCategory, classify, delete_email, is_from_me
 
 load_dotenv(override=True)
 
 # Array to hold webhook dataclass
 webhooks = []
+
+# Spam classification results by email id
+classifications = {}
 
 # Create the FastAPI app
 app = FastAPI()
@@ -29,6 +33,7 @@ templates = Jinja2Templates(directory="templates")
 @app.api_route("/events", methods=["GET", "POST"])
 async def webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     event: Optional[WebhookEvent] = None,
     x_nylas_signature: Optional[str] = Header(None),
 ):
@@ -58,13 +63,37 @@ async def webhook(
         return PlainTextResponse("No event data", status_code=400)
 
     webhooks.append(email_obj)
+    # Classify after replying, so Nylas gets its 200 right away
+    background_tasks.add_task(check_spam, email_obj)
     return PlainTextResponse("Webhook received", status_code=200)
 
 
 # Main page
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse(request, "index.html", {"webhooks": webhooks})
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {"webhooks": webhooks, "classifications": classifications},
+    )
+
+
+# Delete an email after you confirm it on the main page
+@app.post("/delete/{email_id}")
+def delete(email_id: str):
+    result = classifications.get(email_id)
+    email_obj = next((w for w in webhooks if w.id == email_id), None)
+    if email_obj and result and result.category == EmailCategory.SPAM:
+        delete_email(email_obj)
+        webhooks.remove(email_obj)
+        del classifications[email_id]
+    return RedirectResponse(url="/", status_code=303)
+
+
+# Classify emails sent from your own address as spam or not spam
+def check_spam(email_obj: EmailObject):
+    if is_from_me(email_obj):
+        classifications[email_obj.id] = classify(email_obj)
 
 
 # Signature verification

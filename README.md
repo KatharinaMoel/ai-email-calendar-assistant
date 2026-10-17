@@ -1,131 +1,66 @@
-# Week 2: Capture Emails and Test LLM Calls
+# Week 3: A Simple Spam Workflow
 
 ## This Week's Goals
 
-1. **Capture emails on your laptop:** Connect your inbox through Nylas so every new email is delivered to your local app and saved.
-2. **Test LLM calls:** Run small examples that call different kinds of language models.
+1. **Build a spam workflow:** Take the emails you captured in Week 2, parse them with Pydantic, keep only emails sent from your own address, classify each one as spam or not spam with an LLM, and delete spam through Nylas after you confirm.
+2. **Understand FastAPI:** Learn how FastAPI receives requests, validates data with Pydantic, and returns responses. Practice these concepts in the [FastAPI tutorial](week3/fastapi-tutorial/README.md).
 
-## Before You Start
+## Before You Start: Recap Week 2
 
-Complete the Week 1 homework first:
+This week builds on the email capture setup from [Week 2](https://github.com/lindseypeng/ai-personal-assistant/blob/week-2/README.md). Make sure you can still capture emails with Nylas:
 
-- `.env` contains `NYLAS_CLIENT_ID`, `NYLAS_API_KEY`, `NYLAS_API_URI`, and `EMAIL`
-- The Nylas Dashboard lists `http://localhost:5010/oauth/exchange` as a callback URI
+1. **Restart the Serveo tunnel.** Serveo only runs temporarily, so you need a new tunnel each session.
+2. **Start `main.py`:** `cd app` then `uv run main.py`.
+3. **Check the webhook.** If the tunnel URL changed, delete the old webhook in the Nylas Dashboard, update `SERVER_URL`, create a new webhook, and restart `main.py` to load the new secret. See [Start a New Session](docs/start-new-session.md) for each step.
+4. **Send yourself 2 to 3 sample spam emails** from the address in `EMAIL`. Check that each one is saved as JSON in `requests/events/`.
+5. **Follow this week's slides** to build the workflow step by step.
 
-Install the dependencies:
+If emails stop arriving, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md).
+
+## Week 3 Workflow
+
+FastAPI receives the Nylas webhook at `POST /events`, saves the event as JSON, and starts a background spam check. The diagram below shows what happens after capture.
+
+```mermaid
+flowchart LR
+    A[Saved email event] --> B[Sender filter]
+    B -->|Own address| C[LLM classification]
+    B -->|Other sender| D[Skip]
+    C -->|not_spam| E[No action]
+    C -->|spam| F[Show Delete button]
+    F --> G[User clicks and confirms]
+    G --> H[FastAPI POST /delete/email_id]
+    H --> I[Check email is classified as spam]
+    I --> J[Nylas SDK deletes email]
+```
+
+In the web app, the Delete button asks for confirmation before submitting to FastAPI. The endpoint checks that the email is already classified as spam, then calls the Nylas SDK. Nylas itself does not require a user click. The confirmation comes from our application. Protect the delete endpoint before running the app long term.
+
+The sender filter only lets through emails from your own address. While you are learning, this keeps the workflow on test emails you control, so a wrong classification can never delete a real email from someone else.
+
+## Part 1: Run the Spam Workflow
+
+The workflow lives in `app/workflows/spam_workflow.py`. It needs `OPENAI_API_KEY` in `.env`.
+
+**In the browser:** With `main.py` and the tunnel running, send yourself a spam email and refresh `http://localhost:8000`. Emails classified as spam show a Delete button.
+
+**From the terminal:** Run the workflow on one saved event. Use a file name from `requests/events/` without `.json`:
 
 ```bash
-uv sync
+uv run app/workflows/spam_workflow.py <event_id>
 ```
 
-## Part 1: Capture Emails on Your Laptop
+The script prints the category and confidence, then asks before it deletes anything.
 
-When this part is done, each new email flows to your laptop like this:
+## Part 2: Practice FastAPI
 
-```text
-New email → Nylas → Serveo tunnel → main.py /events → saved to requests/events/
-                                                    → shown at localhost:8000
-```
+The `week3/fastapi-tutorial/` folder is a small standalone FastAPI app. It covers routers, Pydantic request validation, GET vs POST, sync vs async endpoints, and Bearer token authentication.
 
-Already finished Part 1 and coming back to test again? See [Start a New Session](docs/start-new-session.md).
-
-### Step 1: Connect Your Email Account
-
-Start the authentication helper:
+Stop `app/main.py` first, since both apps use port 8000. Then run:
 
 ```bash
-cd app/config
-uv run config_auth.py
+cd week3/fastapi-tutorial
+uv run uvicorn main:app --reload
 ```
 
-1. Visit `http://localhost:5010/nylas/auth` to begin authentication.
-2. Log in with your email account and allow access.
-3. Copy the returned grant ID into `.env`:
-
-   ```env
-   NYLAS_GRANT_ID=your_grant_id
-   ```
-
-4. Restart the helper so it loads the new value.
-5. Visit `http://localhost:5010/nylas/recent-emails` to view your latest emails.
-6. Visit `http://localhost:5010/nylas/send-email` to send a test email to your own account.
-
-If `NYLAS_GRANT_ID` is already set, `/nylas/auth` returns that ID and skips the login. To connect a different account, clear the value first.
-
-The flow looks like this:
-
-```text
-Browser → Nylas login → http://localhost:5010/oauth/exchange → grant ID
-```
-
-Nylas only redirects to callback URIs registered in the dashboard, which is why the Week 1 homework added it.
-
-### Step 2: Configure a Tunnel
-
-Nylas must reach your local server over the internet to deliver webhooks. We use [Serveo](https://serveo.net/), which needs no account or installation.
-
-In a separate terminal, run:
-
-```bash
-ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8000 serveo.net
-```
-
-Copy the public HTTPS URL it prints into `.env`:
-
-```env
-SERVER_URL=https://your-subdomain.serveo.net
-```
-
-Keep this terminal open. Serveo is free and can disconnect on its own without warning. If the URL changes when you reconnect, update `SERVER_URL` and register a new webhook. See the [troubleshooting guide](docs/webhook-troubleshoot-guide.md#2-expired-or-changed-tunnel-url) for how to check whether the tunnel is down.
-
-### Step 3: Start the Server
-
-In another terminal:
-
-```bash
-cd app
-uv run main.py
-```
-
-Visit `http://localhost:8000`. You should see the Nylas Webhooks page.
-
-### Step 4: Create the Webhook
-
-```bash
-cd app/config
-uv run config_webhook.py
-```
-
-This registers `SERVER_URL/events` with Nylas for new-email events and prints a webhook secret. Add it to `.env`:
-
-```env
-WEBHOOK_SECRET=your_webhook_secret
-```
-
-**Restart `main.py` so it loads the secret.** `main.py` reads `.env` only when it starts, and it uses the secret to verify that each email came from Nylas. Without a restart, every email returns `401`. Then open **Notifications** in the Nylas Dashboard to confirm the webhook is listed.
-
-When you register a new webhook for a new tunnel URL, delete the old one in the dashboard.
-
-### Step 5: Test the Webhook
-
-1. Send an email to the address in `EMAIL`.
-2. Watch the `main.py` terminal for the incoming request and a `200` status.
-3. Refresh `http://localhost:8000` to see the new message.
-
-Each event is also saved as JSON in `requests/events/`. These files contain email content and are excluded from Git.
-
-`main.py` and the tunnel must both be running to receive emails. If the webhook stops working or returns errors, see the [Webhook Troubleshooting Guide](docs/webhook-troubleshoot-guide.md).
-
-To see what each file in Part 1 does, see [Email Capture Files](docs/email-capture-files.md).
-
-## Part 2: Test LLM Calls
-
-The `week2/` folder has standalone quickstarts for each type of model call. See [week2/README.md](week2/README.md) for the dependencies, API keys, and run commands.
-
-| File | What it shows |
-|------|---------------|
-| `week2/openai-quickstart.py` | Hosted generative model with an API key |
-| `week2/structured_output.py` | Typed output with Pydantic and OpenAI |
-| `week2/jev-quickstart.py` | Decision model with Choice, Score, and Noul |
-| `week2/ollama-quickstart.py` | Open source model running locally, no key |
-| `week2/pydantic-introduction.ipynb` | Pydantic basics |
+Open `http://localhost:8000/docs` to try the endpoint, or run `uv run request.py` from the same folder in another terminal. See the [FastAPI tutorial README](week3/fastapi-tutorial/README.md) for the full walkthrough.

@@ -1,6 +1,6 @@
 # Email Capture Files
 
-These are the files used in Part 1 of the Week 2 README, which captures new emails on your laptop.
+These are the files used in Part 1 of the [Week 2 README](https://github.com/lindseypeng/ai-personal-assistant/blob/week-2/README.md), which captures new emails on your laptop.
 
 | File | Purpose |
 |------|---------|

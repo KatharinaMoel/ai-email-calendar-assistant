@@ -1,4 +1,25 @@
-# Week 2: Capture Emails and Test LLM Calls
+# Week 3: A Simple Spam Workflow
+
+## Week 3 Workflow
+
+FastAPI receives the Nylas webhook at `POST /events`, saves the event as JSON, and starts a background spam check. The diagram below shows what happens after capture.
+
+```mermaid
+flowchart LR
+    A[Saved email event] --> B[Sender filter]
+    B -->|Own address| C[LLM classification]
+    B -->|Other sender| D[Skip]
+    C -->|not_spam| E[No action]
+    C -->|spam| F[Show Delete button]
+    F --> G[User clicks and confirms]
+    G --> H[FastAPI POST /delete/email_id]
+    H --> I[Check email is classified as spam]
+    I --> J[Nylas SDK deletes email]
+```
+
+In the web app, the Delete button asks for confirmation before submitting to FastAPI. The endpoint checks that the email is already classified as spam, then calls the Nylas SDK. Nylas itself does not require a user click. The confirmation comes from our application. Protect the delete endpoint before running the app long term.
+
+## Week 2 Recap: Capture Emails and Test LLM Calls
 
 ## This Week's Goals
 

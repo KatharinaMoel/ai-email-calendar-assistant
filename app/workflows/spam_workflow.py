@@ -20,6 +20,10 @@ EVENTS_DIR = Path(__file__).resolve().parent.parent.parent / "requests" / "event
 
 PROMPT = "Classify the email as spam or not_spam."
 
+# GWDG Chat AI (Academic Cloud) instead of OpenAI, see week2/gwdg_structured_output.py
+GWDG_BASE_URL = "https://chat-ai.academiccloud.de/v1"
+GWDG_MODEL = os.getenv("GWDG_MODEL", "qwen3-30b-a3b-instruct-2507")
+
 
 class EmailCategory(str, Enum):
     SPAM = "spam"
@@ -57,8 +61,13 @@ def is_from_me(email: EmailObject) -> bool:
 
 
 def classify(email: EmailObject) -> Classification:
-    response = OpenAI().responses.parse(
-        model="gpt-4o-mini",
+    client = OpenAI(
+        api_key=os.getenv("ACADEMIC_CLOUD_API_KEY"),
+        base_url=GWDG_BASE_URL,
+        timeout=120,
+    )
+    response = client.responses.parse(
+        model=GWDG_MODEL,
         instructions=PROMPT,
         input=f"From: {email.from_[0].email}\nSubject: {email.subject}\n\n{email.body}",
         text_format=Classification,
